@@ -6,6 +6,8 @@ using System.Text;
 using System.Xml.Linq;
 using CsvHelper;
 using CsvHelper.Configuration;
+using System.ComponentModel.Design.Serialization;
+using Query.QueryBuilderStarterKit;
 
 namespace Query
 {
@@ -199,7 +201,7 @@ namespace Query
         public void DeleteAll<T>(T obj) where T: IClassModel
         {
             var command = connection.CreateCommand();
-            command.CommandText = $"DELETE * FROM {typeof(T).Name}";
+            command.CommandText = $"DELETE FROM {typeof(T).Name}";
             
             var reader = command.ExecuteNonQuery();
             
@@ -229,22 +231,33 @@ namespace Query
         
         public void CreateAll<T>(T obj) where T : IClassModel
         {
-            string csvFilePath = "/AllPokemon.csv";
-
-            List<T> dataList;
-
+            string csvFilePath = FileRoot.Root + $"/QueryBuilderStarterKit/{typeof(T).Name}.csv";
            
             using (var reader = new StreamReader(csvFilePath))
-            using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
             {
-                dataList = csv.GetRecords<T>().ToList();
+                int count = 0;
+                while (!reader.EndOfStream)
+                {
+                    string? line = reader.ReadLine();
+                    string[] lineElements = line.Split(',');
+                    
+
+                    if (lineElements.Length > 5)
+                    {
+                        Pokemon p = new Pokemon(count, Convert.ToInt32(lineElements[0]), Convert.ToString(lineElements[1]), lineElements[2], lineElements[3], lineElements[4], Convert.ToInt32(lineElements[5]), Convert.ToInt32(lineElements[6]), Convert.ToInt32(lineElements[7]), Convert.ToInt32(lineElements[8]), Convert.ToInt32(lineElements[9]), Convert.ToInt32(lineElements[10]), Convert.ToInt32(lineElements[11]), Convert.ToInt32(lineElements[12]));
+
+                        Create(p);
+
+                        count++;
+                    }
+                    else
+                    {
+                        BannedGame b = new BannedGame(count, lineElements[0], lineElements[1], lineElements[2], lineElements[3]);
+                        Create(b);
+                        count++;
+                    }
+                }
             }
-
-            Console.WriteLine(dataList.GetType());
-
-
         }
-        
-
     }
 }
